@@ -100,7 +100,7 @@ fi
 
 case "$log" in
     *#major* ) new=$(semver -i major $tag); part="major";;
-    *feature/* ) new=$(semver -i minor $tag); part="minor";;
+    *feature* ) new=$(semver -i minor $tag); part="minor";;
     *#patch* ) new=$(semver -i patch $tag); part="patch";;
     *#none* )
         echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0;;
