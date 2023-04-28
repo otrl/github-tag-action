@@ -149,6 +149,8 @@ log=${history_type[${branch_history}]}
 printf "History:\n---\n%s\n---\n" "$log"
 
 case "$log" in
+    *feature* ) new=$(semver -i minor "$tag"); part="minor";;
+    *Feature* ) new=$(semver -i minor "$tag"); part="minor";;
     *$major_string_token* ) new=$(semver -i major "$tag"); part="major";;
     *$minor_string_token* ) new=$(semver -i minor "$tag"); part="minor";;
     *$patch_string_token* ) new=$(semver -i patch "$tag"); part="patch";;
