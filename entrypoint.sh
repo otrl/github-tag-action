@@ -89,7 +89,7 @@ commit=$(git rev-parse HEAD)
 if [ "$tag_commit" == "$commit" ]; then
     echo "No new commits since previous tag. Skipping..."
     #echo ::set-output name=tag::$tag
-    echo "{tag}={$tag}" >> $GITHUB_OUTPUT
+    echo "{tag}={$tag}" >> "$GITHUB_ENV"
     exit 0
 fi
 
@@ -106,11 +106,11 @@ case "$log" in
     *#patch* ) new=$(semver -i patch $tag); part="patch";;
     *#none* )
         #echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0;;
-	echo "Default bump was set to none. Skipping..."; echo "{new_tag}={$tag}" >> $GITHUB_OUTPUT; echo "{tag}={$tag}" >> $GITHUB_OUTPUT; exit 0;;
+	echo "Default bump was set to none. Skipping..."; echo "{new_tag}={$tag}" >> "$GITHUB_ENV"; echo "{tag}={$tag}" >> "$GITHUB_ENV"; exit 0;;
     * )
         if [ "$default_semvar_bump" == "none" ]; then
             #echo "Default bump was set to none. Skipping..."; echo ::set-output name=new_tag::$tag; echo ::set-output name=tag::$tag; exit 0
-	    echo "Default bump was set to none. Skipping..."; echo "{new_tag}={$tag}" >> $GITHUB_OUTPUT; echo "{tag}={$tag}" >> $GITHUB_OUTPUT; exit 0
+	    echo "Default bump was set to none. Skipping..."; echo "{new_tag}={$tag}" >> "$GITHUB_ENV"; echo "{tag}={$tag}" >> "$GITHUB_ENV"; exit 0
         else
             new=$(semver -i "${default_semvar_bump}" $tag); part=$default_semvar_bump
         fi
@@ -149,21 +149,21 @@ fi
 
 # set outputs
 #echo ::set-output name=new_tag::$new
-echo "{new_tag}={$new}" >> $GITHUB_OUTPUT
+echo "{new_tag}={$new}" >> "$GITHUB_ENV"
 #echo ::set-output name=part::$part
-echo "{part}={$part}" >> $GITHUB_OUTPUT
+echo "{part}={$part}" >> "$GITHUB_ENV"
 
 
 # use dry run to determine the next tag
 if $dryrun
 then
     #echo ::set-output name=tag::$tag
-    echo "{tag}={$tag}" >> $GITHUB_OUTPUT
+    echo "{tag}={$tag}" >> "$GITHUB_ENV"
     exit 0
 fi
 
 #echo ::set-output name=tag::$new
-echo "{tag}={$new}" >> $GITHUB_OUTPUT
+echo "{tag}={$new}" >> "$GITHUB_ENV"
 
 # create local git tag
 git tag $new
