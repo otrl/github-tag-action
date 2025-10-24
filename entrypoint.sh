@@ -67,17 +67,54 @@ case "$tag_context" in
 esac
 
 
-# if there are none, start tags at INITIAL_VERSION which defaults to 0.0.0
-if [ -z "$tag" ]
-then
-    log=$(git log --pretty='%B')
-    tag="$initial_version"
-    if [ -z "$pre_tag" ] && $pre_release
-    then
-      pre_tag="$initial_version"
-    fi
+if [ -z "$tag" ]; then
+        log=$(git log --pretty='%B')
+        tag="$initial_version"
+        if [ -z "$pre_tag" ] && $pre_release; then
+                pre_tag="$initial_version"
+        fi
+fi
+
+# If no previous tag commit, set tag_commit to empty
+if [ -z "$tag" ]; then
+        tag_commit=""
 else
-    log=$(git log $tag..HEAD --pretty='%B')
+        tag_commit=$(git rev-list -n 1 $tag)
+fi
+
+commit=$(git rev-parse HEAD)
+
+# If no previous tag, always create the initial tag
+if [ -z "$tag_commit" ]; then
+        echo "No previous tag found. Creating initial tag $initial_version."
+        new="$initial_version"
+        part="initial"
+        echo "new_tag=$new" >> "$GITHUB_ENV"
+        echo "part=$part" >> "$GITHUB_ENV"
+        echo "{new_tag}={$new}" >> "$GITHUB_OUTPUT"
+        echo "{part}={$part}" >> "$GITHUB_OUTPUT"
+        git tag $new
+        dt=$(date '+%Y-%m-%dT%H:%M:%SZ')
+        full_name=$GITHUB_REPOSITORY
+        git_refs_url=$(jq .repository.git_refs_url $GITHUB_EVENT_PATH | tr -d '"' | sed 's/{\/sha}//g')
+        echo "$dt: **pushing tag $new to repo $full_name"
+        git_refs_response=$(curl -s -X POST $git_refs_url \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                -d @- << EOF
+{
+    "ref": "refs/tags/$new",
+    "sha": "$commit"
+}
+EOF
+        )
+        git_ref_posted=$( echo "${git_refs_response}" | jq .ref | tr -d '"' )
+        echo "::debug::${git_refs_response}"
+        if [ "${git_ref_posted}" = "refs/tags/${new}" ]; then
+            exit 0
+        else
+            echo "::error::Tag was not created properly."
+            exit 1
+        fi
 fi
 
 # get current commit hash for tag
