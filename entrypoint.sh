@@ -68,7 +68,6 @@ esac
 
 
 if [ -z "$tag" ]; then
-        log=$(git log --pretty='%B')
         tag="$initial_version"
         if [ -z "$pre_tag" ] && $pre_release; then
                 pre_tag="$initial_version"
@@ -80,6 +79,13 @@ if [ -z "$tag" ]; then
         tag_commit=""
 else
         tag_commit=$(git rev-list -n 1 $tag)
+fi
+
+# get log of commits since last tag (or all commits if no tag exists)
+if [ -z "$tag_commit" ]; then
+        log=$(git log --pretty='%B')
+else
+        log=$(git log ${tag_commit}..HEAD --pretty='%B')
 fi
 
 commit=$(git rev-parse HEAD)
